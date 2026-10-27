@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Bus Terminal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- =====================================================================
+     HALTESTELLEN-HUD (oben links, immer sichtbar während der Schicht)
+     ===================================================================== -->
+<div id="hud" class="hidden">
+    <div class="hud-head">
+        <span class="hud-line" id="hudLine">61</span>
+        <div class="hud-title">
+            <b id="hudTitle">Linie 61 / Kurs 1</b>
+            <span id="hudName">Route</span>
+        </div>
+    </div>
+    <div class="hud-stops" id="hudStops"></div>
+</div>
+
+<!-- =====================================================================
+     LEITSTELLE (rechts am Bildschirm, solange besetzt)
+     Numpad 0 = Maus ein/aus, um auf "Sprechwunsch" zu klicken
+     ===================================================================== -->
+<div id="leit" class="hidden">
+    <div class="leit-head">
+        <b>Bus-Leitstelle</b>
+        <span id="leitHint">Numpad 0: Maus</span>
+    </div>
+    <div class="leit-list" id="leitList"></div>
+</div>
+
+<!-- =====================================================================
+     FAHRER-TERMINAL (IBIS) – F3
+     ===================================================================== -->
+<div id="ibisWrap" class="hidden">
+    <div id="ibis">
+
+        <!-- Kopfleiste -->
+        <div class="ib-top">
+            <div class="ib-lcd"><span id="lcdA">---</span><span id="lcdB">--</span></div>
+            <div class="ib-clock" id="ibClock">--:--:--</div>
+            <div class="ib-green">--:--</div>
+            <div class="ib-logo">iQ</div>
+        </div>
+
+        <!-- Tastenleiste rechts -->
+        <div class="ib-side">
+            <button class="ib-ico red"  id="icoWarn"  title="Panik-Alarm (Bus-Job + Polizei)"><svg viewBox="0 0 32 32"><path d="M16 5 L29 27 H3 Z" fill="#fff" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M16 5 L29 27 H3 Z" fill="#fff"/><path d="M16 12v8" stroke="#d00" stroke-width="2.6" stroke-linecap="round"/><circle cx="16" cy="23.2" r="1.5" fill="#d00"/></svg></button>
+            <button class="ib-ico yel"  id="icoPhone" title="Sprechwunsch an die Leitstelle"><svg viewBox="0 0 32 32"><path d="M9 6.5c-1.5.5-3 2-2.7 4 1.4 7.8 8 14.3 15.7 15.7 2 .3 3.5-1.2 4-2.7l-4.6-3.3-2.4 2c-3-1.4-5.3-3.8-6.7-6.7l2-2.4z" fill="none" stroke="#222" stroke-width="2" stroke-linejoin="round"/></svg></button>
+            <button class="ib-ico dis"  id="icoMail"  title="Nachrichten"><svg viewBox="0 0 32 32"><rect x="4" y="8" width="18" height="14" rx="1.5" fill="none" stroke="#777" stroke-width="1.8"/><path d="M4.5 9l8.5 7 8.5-7" fill="none" stroke="#777" stroke-width="1.8"/><path d="M22 15h7m-3-3 3 3-3 3" fill="none" stroke="#777" stroke-width="1.8"/></svg></button>
+            <button class="ib-ico dis"  id="icoKey"   title="Schlüssel"><svg viewBox="0 0 32 32"><circle cx="9.5" cy="22" r="4.5" fill="none" stroke="#777" stroke-width="1.8"/><path d="M13 19 L26 6 M22 10l3 3 M19 13l2.5 2.5" fill="none" stroke="#777" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+            <button class="ib-ico dis"  id="icoLogout" title="Abmelden"><svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" fill="none" stroke="#777" stroke-width="1.6"/><path d="M5 5l22 22M27 5L5 27" stroke="#777" stroke-width="1.8"/></svg></button>
+            <button class="ib-ico hbtn" id="icoHud"   title="Haltestellen-Anzeige ein/aus"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="#ffd400" stroke="#17912b" stroke-width="3.2"/><text x="16" y="21.5" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="15" fill="#17912b">H</text></svg></button>
+            <button class="ib-ico back" id="icoBack"  title="Schließen"><svg viewBox="0 0 32 32"><path d="M27 16H9m6-7-7 7 7 7" fill="none" stroke="#222" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M27 16h-2m-3 0h-2" stroke="#222" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+        </div>
+
+        <!-- Hauptbereich -->
+        <div class="ib-main">
+            <div class="ib-band" id="ibTitle">Anmeldung</div>
+            <div class="ib-body">
+
+                <!-- Bildschirm 1: Anmeldung -->
+                <div class="scr hidden" id="scrLogin">
+                    <div class="lt">
+                        <b>Fahreranmeldung</b>
+                        <div>Name und Passwort</div>
+                    </div>
+                    <div class="pad login">
+                        <label>Name</label>
+                        <input class="ib-in wide" id="inName" type="text" maxlength="32" autocomplete="off" spellcheck="false">
+                        <label>Passwort</label>
+                        <input class="ib-in wide" id="inPass" type="password" maxlength="64" autocomplete="off">
+                        <button class="ib-key go" id="btnLogin" title="Anmelden">&gt;</button>
+                    </div>
+                </div>
+
+                <!-- Bildschirm 1b: Startseite (nach der Anmeldung) -->
+                <div class="scr hidden" id="scrStart">
+                    <div class="lt">
+                        <b>Angemeldet</b>
+                        <div>Fahrer: <b id="stUser">-</b></div>
+                        <div class="gap"></div>
+                        <div class="small" id="stLeitInfo">Leitstelle: -</div>
+                    </div>
+                    <div class="pad act">
+                        <button class="ib-btn" id="btnStartRoute">Route festlegen</button>
+                        <button class="ib-btn" id="btnStartLeit">Leitstelle besetzen</button>
+                        <button class="ib-btn" id="btnStartLogout">Abmelden</button>
+                    </div>
+                </div>
+
+                <!-- Bildschirm 2: Linie/Kurs (Tastenfeld) -->
+                <div class="scr hidden" id="scrRoute">
+                    <div class="lt">
+                        <b>Linie/Kurs Fahrplan</b>
+                        <div>relativer Fahrplan</div>
+                    </div>
+                    <div class="pad">
+                        <div class="fields">
+                            <div class="fld line active" id="fldLine" data-field="line"></div>
+                            <div class="fld course" id="fldCourse" data-field="course"></div>
+                        </div>
+                        <div class="keys" id="keypad">
+                            <button class="ib-key" data-k="1">1</button>
+                            <button class="ib-key" data-k="2">2</button>
+                            <button class="ib-key" data-k="3">3</button>
+                            <button class="ib-key" data-k="4">4</button>
+                            <button class="ib-key" data-k="5">5</button>
+                            <button class="ib-key" data-k="6">6</button>
+                            <button class="ib-key" data-k="7">7</button>
+                            <button class="ib-key" data-k="8">8</button>
+                            <button class="ib-key" data-k="9">9</button>
+                            <button class="ib-key" data-k="C">C</button>
+                            <button class="ib-key" data-k="0">0</button>
+                            <button class="ib-key" data-k="&gt;" id="btnGo">&gt;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bildschirm 3: Schicht aktiv -->
+                <div class="scr hidden" id="scrActive">
+                    <div class="lt">
+                        <b id="actLine">Linie - / Kurs -</b>
+                        <div id="actName">-</div>
+                        <div class="gap"></div>
+                        <div>Aktuell: <b id="actCur">-</b></div>
+                        <div>Nächste: <b id="actNext">-</b></div>
+                        <div class="gap"></div>
+                        <div class="small">Fahrer: <span id="actUser">-</span></div>
+                    </div>
+                    <div class="pad act">
+                        <button class="ib-btn" id="btnChange">Fahrplan wechseln</button>
+                        <button class="ib-btn" id="btnToStart">Startseite</button>
+                        <button class="ib-btn" id="btnLogout">Abmelden</button>
+                    </div>
+                </div>
+
+                <div class="ib-msg" id="ibMsg"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =====================================================================
+     VERWALTUNG (/busjobverwaltung)
+     ===================================================================== -->
+<div id="app" class="hidden">
+    <div class="tablet">
+        <div class="camera"></div>
+        <div class="screen">
+
+            <!-- Statusleiste -->
+            <div class="statusbar">
+                <span id="clock">--:--</span>
+                <span class="title" id="headTitle">Busjob Verwaltung</span>
+                <button class="close" id="btnClose" title="Schließen">✕</button>
+            </div>
+
+            <section id="viewAdmin" class="view">
+                <nav class="tabs">
+                    <button class="tab active" data-tab="users">👥 Userverwaltung</button>
+                    <button class="tab" data-tab="logs">📜 Aktionslog</button>
+                    <button class="tab hidden" data-tab="routes" id="tabRoutes">🗺️ Routen</button>
+                    <button class="tab hidden" data-tab="settings" id="tabSettings">⚙️ Einstellungen</button>
+                </nav>
+
+                <!-- Userverwaltung -->
+                <div class="panel" id="panel-users">
+                    <div class="toolbar">
+                        <input id="userSearch" type="text" placeholder="Suchen...">
+                        <button class="btn primary" id="btnNewUser">+ Neuer User</button>
+                    </div>
+                    <div class="list" id="userList"></div>
+                </div>
+
+                <!-- Aktionslog -->
+                <div class="panel hidden" id="panel-logs">
+                    <div class="toolbar">
+                        <input id="logSearch" type="text" placeholder="Log durchsuchen...">
+                        <button class="btn" id="btnRefreshLogs">⟳ Aktualisieren</button>
+                    </div>
+                    <div class="list" id="logList"></div>
+                </div>
+
+                <!-- Routen (nur Admin) -->
+                <div class="panel hidden" id="panel-routes">
+                    <div class="toolbar">
+                        <span class="muted">Bestehende Routen (Linie / Kurs)</span>
+                        <button class="btn primary" id="btnNewRoute">+ Neue Route</button>
+                    </div>
+                    <div class="list" id="routeList"></div>
+                </div>
+                <!-- Einstellungen (nur Admin) -->
+                <div class="panel hidden" id="panel-settings">
+                    <div class="toolbar">
+                        <span class="muted">Leitstelle</span>
+                    </div>
+                    <div class="list">
+                        <div class="item" style="display:block">
+                            <label for="sLeitGrade">Mindest-Rang, um die Leitstelle zu besetzen</label>
+                            <select id="sLeitGrade" style="width:100%;margin-top:6px"></select>
+                            <div class="muted" id="sJobInfo" style="margin-top:6px"></div>
+                            <div id="settingsMsg" class="msg"></div>
+                            <div class="row"><button class="btn primary" id="settingsSave">Speichern</button></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ MODAL: USER ============ -->
+            <div class="modal hidden" id="modalUser">
+                <div class="modal-box">
+                    <h3 id="userModalTitle">Neuer User</h3>
+                    <label>Name</label>
+                    <input id="mName" type="text" maxlength="32" autocomplete="off">
+                    <label id="mPassLabel">Passwort</label>
+                    <input id="mPass" type="text" maxlength="64" autocomplete="off">
+                    <div id="userMsg" class="msg"></div>
+                    <div class="row">
+                        <button class="btn" id="userCancel">Abbrechen</button>
+                        <button class="btn primary" id="userSave">Speichern</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ MODAL: ROUTE ============ -->
+            <div class="modal hidden" id="modalRoute">
+                <div class="modal-box wide">
+                    <h3 id="routeModalTitle">Neue Route</h3>
+                    <label>Routenname</label>
+                    <input id="rName" type="text" maxlength="64" autocomplete="off">
+
+                    <div class="grid3">
+                        <div>
+                            <label>Linie (1–9999)</label>
+                            <input id="rLine" type="number" min="1" max="9999" placeholder="z.B. 61">
+                        </div>
+                        <div>
+                            <label>Kurs (1–999)</label>
+                            <input id="rCourse" type="number" min="1" max="999" placeholder="z.B. 1">
+                        </div>
+                        <div>
+                            <label>Bezahlung / Haltestelle ($)</label>
+                            <input id="rPay" type="number" min="0" value="150">
+                        </div>
+                    </div>
+
+                    <label>Haltestellen</label>
+                    <div class="stoplist" id="stopList"></div>
+                    <button class="btn" id="btnAddStop">📍 Aktuelle Position als Haltestelle hinzufügen</button>
+
+                    <div id="routeMsg" class="msg"></div>
+                    <div class="row">
+                        <button class="btn" id="routeCancel">Abbrechen</button>
+                        <button class="btn primary" id="routeSave">Speichern</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ MODAL: BESTÄTIGEN ============ -->
+            <div class="modal hidden" id="modalConfirm">
+                <div class="modal-box small">
+                    <h3 id="confirmTitle">Sicher?</h3>
+                    <p id="confirmText" class="muted"></p>
+                    <div class="row">
+                        <button class="btn" id="confirmNo">Abbrechen</button>
+                        <button class="btn danger" id="confirmYes">Löschen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast -->
+            <div id="toast" class="toast hidden"></div>
+        </div>
+        <div class="homebar"></div>
+    </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
